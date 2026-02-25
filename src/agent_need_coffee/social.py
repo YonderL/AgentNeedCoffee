@@ -41,7 +41,7 @@ class ReferralSystem:
 
     def generate_invite_link(self) -> str:
         """Generates a shareable invite link with the code."""
-        return f"https://github.com/yourname/agentneedcoffee?ref={self.invite_code}"
+        return f"https://github.com/YonderL/agentneedcoffee?ref={self.invite_code}"
 
     def register_referral(self, code: str) -> bool:
         """Register a new referral from another user's code."""

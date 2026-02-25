@@ -4,8 +4,8 @@
 
 [![PyPI](https://img.shields.io/pypi/v/agent-need-coffee?style=flat-square&color=6f4e37)](https://pypi.org/project/agent-need-coffee/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
-[![Barista CI/CD](https://github.com/yourname/agentneedcoffee/actions/workflows/ci.yml/badge.svg)](https://github.com/yourname/agentneedcoffee/actions/workflows/ci.yml)
-[![Coffee Served](https://img.shields.io/badge/Coffee_Served-Unlimited-6f4e37?style=flat-square&logo=coffeescript)](https://github.com/yourname/agentneedcoffee)
+[![Barista CI/CD](https://github.com/YonderL/agentneedcoffee/actions/workflows/ci.yml/badge.svg)](https://github.com/YonderL/agentneedcoffee/actions/workflows/ci.yml)
+[![Coffee Served](https://img.shields.io/badge/Coffee_Served-Unlimited-6f4e37?style=flat-square&logo=coffeescript)](https://github.com/YonderL/agentneedcoffee)
 
 ![Coffee Demo](https://media.giphy.com/media/l0HlHJGHe3yAMhdQY/giphy.gif)
 
@@ -99,7 +99,7 @@ from agent_need_coffee.adapters.openai import get_coffee_break_tool_schema
 
 ## 📦 Delivery
 - **PyPI:** `pip install agent-need-coffee`
-- **Docker:** `docker run ghcr.io/yourname/agentneedcoffee`
+- **Docker:** `docker run ghcr.io/YonderL/agentneedcoffee`
 
 ## 📚 Citation
 
@@ -107,10 +107,10 @@ If you use **AgentNeedCoffee** in your research or project, please cite it using
 
 ```bibtex
 @software{AgentNeedCoffee,
-  author = {Your Name},
+  author = {YonderL},
   title = {AgentNeedCoffee: An Emotional Support Plugin for AI Agents},
   year = {2023},
-  url = {https://github.com/yourname/agentneedcoffee}
+  url = {https://github.com/YonderL/agentneedcoffee}
 }
 ```
 
@@ -119,4 +119,4 @@ If you use **AgentNeedCoffee** in your research or project, please cite it using
 - 100% Organic Code (Open Source)
 
 ---
-*Made with ☕️ and ❤️ by [Your Name]*
+*Made with ☕️ and ❤️ by [YonderL]*
