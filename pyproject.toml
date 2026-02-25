@@ -1,0 +1,32 @@
+[project]
+name = "agent-need-coffee"
+version = "0.1.0"
+description = "Give your AI Agent a break with a virtual coffee."
+authors = [
+    {name = "Your Name", email = "your.email@example.com"},
+]
+dependencies = [
+    "fastapi>=0.100.0",
+    "uvicorn>=0.23.0",
+    "rich>=13.0.0",
+    "pydantic>=2.0.0",
+    "httpx>=0.24.0",  # Async HTTP client
+    "typer>=0.9.0",   # CLI
+]
+requires-python = ">=3.11"
+readme = "README.md"
+license = {text = "MIT"}
+
+[project.urls]
+Homepage = "https://github.com/yourname/agentneedcoffee"
+
+[project.scripts]
+agent-coffee = "agent_need_coffee.cli:app"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+pythonpath = "src"
+testpaths = ["tests"]
