@@ -40,7 +40,7 @@ def test_barista_brew(barista):
     assert coffee.message in Barista.ENCOURAGEMENT_TEXTS
     
     # Check log file
-    with open(barista.log_file, "r") as f:
+    with open(barista.log_file, "r", encoding="utf-8") as f:
         content = f.read()
         assert coffee.message in content
 

@@ -80,7 +80,7 @@ class Barista:
         """Logs the coffee consumption to a local file."""
         entry = asdict(coffee)
         with open(self.log_file, "a", encoding="utf-8") as f:
-            f.write(json.dumps(entry) + "\n")
+            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
         logger.info(f"☕️ Coffee served: {coffee.message}")
 
 
