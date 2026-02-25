@@ -6,7 +6,7 @@ import asyncio
 import json
 from .core import EmotionMonitor, Barista
 
-app = FastAPI(title="AgentNeedCoffee Server", version="0.1.0")
+app = FastAPI(title="AgentNeedCoffee Server", version="0.1.1")
 
 # Enable CORS
 app.add_middleware(
