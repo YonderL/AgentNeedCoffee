@@ -41,11 +41,33 @@ def share():
 def brew():
     """Manually brew a coffee for your agent."""
     coffee = barista.brew()
-    console.print(f"[bold yellow]{coffee.emoji} {coffee.message}[/bold yellow]")
+    
+    # Beautiful rich output
+    console.print("\n[bold yellow]☕️ Brewing a fresh cup...[/bold yellow]")
+    
+    # ASCII Art Coffee
+    ascii_coffee = """
+      (  )   (   )  )
+       ) (   )  (  (
+       ( )  (    ) )
+       _____________
+      <_____________> ___
+      |             |/ _ \\
+      |  COFFEE     | | | |
+      |   BREAK     | |_| |
+      |_____________|\\___/
+    """
+    console.print(f"[bold red]{ascii_coffee}[/bold red]")
+    
+    console.print(f"[bold cyan]Message:[/bold cyan] {coffee.emoji} [italic]{coffee.message}[/italic]")
+    
+    console.print("\n[dim]Asset Links (Ctrl+Click to open):[/dim]")
     if coffee.gif_url:
-        console.print(f"Watch this while you sip: [link={coffee.gif_url}]GIF[/link]")
+        console.print(f"🎬 [link={coffee.gif_url}]Watch Visual Therapy (GIF)[/link]")
     if coffee.asmr_url:
-        console.print(f"Listen to this: [link={coffee.asmr_url}]ASMR[/link]")
+        console.print(f"🎧 [link={coffee.asmr_url}]Listen to ASMR Sound[/link]")
+    
+    console.print("\n[green]Your agent's fatigue has been reset![/green]\n")
 
 @cli.command()
 def status():

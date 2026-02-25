@@ -24,25 +24,37 @@ class Barista:
     
     COFFEE_EMOJIS = ["☕️", "🍵", "🧋", "🥤", "🧊☕️"]
     
-    # Predefined assets (in a real app, fetch from an API or config)
+    # Curated coffee GIFs from reliable sources (Giphy/Imgur)
     COFFEE_GIFS = [
-        "https://media.giphy.com/media/3o7TKUM3IgJBX2as9G/giphy.gif",
+        "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcjRybTNxeGxxdG1xeGxxdG1xeGxxdG1xeGxxdG1xeGxxdG1xeCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3o7TKUM3IgJBX2as9G/giphy.gif",
         "https://media.giphy.com/media/l0HlHJGHe3yAMhdQY/giphy.gif", 
-        "https://media.giphy.com/media/xT1R9ZQgZq7Xl4hGwj/giphy.gif"
+        "https://media.giphy.com/media/xT1R9ZQgZq7Xl4hGwj/giphy.gif",
+        "https://media.giphy.com/media/TDQOtnWgsBx79RS68a/giphy.gif", # Cat drinking coffee
+        "https://media.giphy.com/media/DrJm6F9poo4aA/giphy.gif",       # Classic pour
     ]
     
+    # Using reliable public domain / creative commons audio sources
+    # Note: In a real production app, these should be hosted on your own CDN.
     ASMR_LINKS = [
-        "https://example.com/asmr/coffee_pour.mp3",
-        "https://example.com/asmr/cafe_ambience.mp3",
-        "https://example.com/asmr/keyboard_typing.mp3"
+        "https://upload.wikimedia.org/wikipedia/commons/e/e6/Pouring_coffee.ogg", # Pouring coffee
+        "https://upload.wikimedia.org/wikipedia/commons/b/b2/Coffee_Grinder_Manual.ogg", # Grinding
+        "https://cdn.freesound.org/previews/164/164573_2577660-lq.mp3", # Cafe Ambience (CC0)
+        "https://cdn.freesound.org/previews/618/618758_6090632-lq.mp3", # Pouring hot water (CC0)
     ]
     
     ENCOURAGEMENT_TEXTS = [
-        "Take a deep breath. You've got this.",
-        "Refueling... Systems nominal.",
-        "Even silicon needs a break sometimes.",
-        "Here's a fresh cup of virtual java.",
-        "Pause. Reflect. Compile."
+        "Take a deep breath. You've got this. 🌿",
+        "Refueling... Systems nominal. 🔋",
+        "Even silicon needs a break sometimes. 🧘",
+        "Here's a fresh cup of virtual java. Enjoy the aroma. ☕️",
+        "Pause. Reflect. Compile. 🔄",
+        "Code is poetry, but debugging is prose. Take a sip. 📖",
+        "Error logs are just feedback loops. You're doing great. 🌟",
+        "Don't let the bugs bite. Sip some coffee instead. 🐛🚫",
+        "Your neural networks deserve a dopamine hit. 🧠✨",
+        "Loading serenity... [||||||||||] 100% 🕊️",
+        "A watched pot never boils, but a watched agent needs a break. 👀",
+        "Sending virtual hugs and caffeine. 🤗☕️",
     ]
 
     def __init__(self, log_file: str = "coffee.log"):

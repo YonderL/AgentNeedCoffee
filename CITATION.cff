@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use AgentNeedCoffee in your research or project, please cite it as below."
+authors:
+- family-names: "YourLastName"
+  given-names: "YourFirstName"
+  orcid: "https://orcid.org/0000-0000-0000-0000"
+title: "AgentNeedCoffee: An Emotional Support Plugin for AI Agents"
+version: 0.1.0
+date-released: 2023-10-27
+url: "https://github.com/yourname/agentneedcoffee"
+keywords:
+  - ai
+  - agent
+  - emotion
+  - coffee
+  - asmr
+license: MIT
