@@ -44,12 +44,16 @@ jobs:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Lowercase Repo Name
+      run: |
+        echo "REPO_LOWER=${GITHUB_REPOSITORY,,}" >>${GITHUB_ENV}
     - name: Build and push Docker image
       uses: docker/build-push-action@v4
       with:
         context: .
         push: true
-        tags: ghcr.io/${{ github.repository }}/agentneedcoffee:latest
+        # Repository name must be lowercase
+        tags: ghcr.io/${{ env.REPO_LOWER }}:latest
 
   publish-pypi:
     needs: test
