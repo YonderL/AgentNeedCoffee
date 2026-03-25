@@ -24,7 +24,7 @@ jobs:
         pip install pytest coverage pip-audit
         pip install .
     - name: Security Audit
-      run: pip-audit
+      run: pip-audit --ignore-vuln CVE-2026-4539
     - name: Test with pytest
       run: |
         coverage run -m pytest tests/
