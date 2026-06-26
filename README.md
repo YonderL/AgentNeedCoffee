@@ -1,31 +1,63 @@
-# AgentNeedCoffee
+<h1 align="center">AgentNeedCoffee</h1>
 
-AgentNeedCoffee is a local Model Context Protocol (MCP) server that helps AI
-agents recover from bad control flow: repeated failed commands, blind retries,
-context pressure, rate limits, and long-running work without progress.
+<p align="center">
+  <strong>A local MCP recovery layer for AI agents that get stuck, retry blindly, or lose control of long-running work.</strong>
+</p>
 
-The coffee metaphor stays, but the product is now a recovery layer. A "coffee
-break" records a checkpoint and changes how the next recommendation is computed.
+<p align="center">
+  <a href="https://github.com/YonderL/AgentNeedCoffee"><img alt="MCP" src="https://img.shields.io/badge/MCP-local%20stdio-6f4e37?style=for-the-badge"></a>
+  <a href="https://github.com/YonderL/AgentNeedCoffee"><img alt="Python" src="https://img.shields.io/badge/Python-3.10%2B-3776ab?style=for-the-badge"></a>
+  <a href="https://github.com/YonderL/AgentNeedCoffee"><img alt="Storage" src="https://img.shields.io/badge/State-SQLite-003b57?style=for-the-badge"></a>
+  <a href="https://github.com/YonderL/AgentNeedCoffee/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/badge/License-MIT-111827?style=for-the-badge"></a>
+</p>
 
-## Why It Exists
+<p align="center">
+  <code>coffee_report_event</code> . <code>coffee_recommend_recovery</code> . <code>coffee_take_break</code> . <code>coffee_recovery_review</code>
+</p>
 
-Most agent failures are not caused by a lack of model intelligence. They happen
-when the agent keeps doing the same unproductive thing:
+---
 
-- rerunning the same failing command
-- retrying a flaky tool without changing any variable
-- continuing after the context has become too large
-- editing more code before isolating the failing assumption
-- failing to ask for human input when autonomous progress is unlikely
+## The Idea
 
-AgentNeedCoffee gives the agent a small external memory and policy engine. The
-agent reports what is happening, then the MCP server returns a concrete recovery
-action such as `create_checkpoint`, `compact_context`, `backoff`, or `ask_human`.
+AI agents do not only fail because they lack reasoning ability. They often fail
+because their control flow degrades:
+
+- the same command is rerun without changing the hypothesis
+- the same tool error is retried until the context fills up
+- rate limits trigger a noisy retry loop
+- a long task continues without a checkpoint
+- the agent should ask for help, but keeps acting
+
+AgentNeedCoffee gives the agent a local MCP server that records runtime events,
+detects loops, and returns a concrete recovery action.
+
+<table>
+  <tr>
+    <td><strong>Detect</strong></td>
+    <td>Repeated failures, retries, rate limits, and context pressure.</td>
+  </tr>
+  <tr>
+    <td><strong>Decide</strong></td>
+    <td>Map run state to actions like <code>backoff</code>, <code>compact_context</code>, or <code>ask_human</code>.</td>
+  </tr>
+  <tr>
+    <td><strong>Recover</strong></td>
+    <td>Create checkpoints so the agent resumes from evidence, not habit.</td>
+  </tr>
+</table>
+
+## MCP + Skill
+
+AgentNeedCoffee is now two pieces:
+
+| Piece | Role | Lives in |
+| --- | --- | --- |
+| MCP server | Stores state and returns recovery actions | `src/agent_need_coffee/mcp_server.py` |
+| Agent skill | Teaches the agent when and how to call the MCP tools | `skills/agent-need-coffee/` |
+
+The MCP server is the runtime. The skill is the operating procedure.
 
 ## Architecture
-
-AgentNeedCoffee is local-first. It does not require a cloud server, domain, open
-port, account system, or hosted database.
 
 ```text
 AI agent / MCP client
@@ -34,14 +66,13 @@ AI agent / MCP client
         v
 agent-need-coffee-mcp
         |
-        | records events, evaluates policy
+        | record event -> evaluate policy -> return recovery action
         v
 SQLite state store
 ```
 
-The MCP client starts `agent-need-coffee-mcp` as a local process and communicates
-with it over standard input/output. The server persists state in SQLite so it can
-remember a run across tool calls and process restarts.
+AgentNeedCoffee is local-first. It does not need a hosted API, account system,
+open port, or cloud database.
 
 Default state path:
 
@@ -49,26 +80,27 @@ Default state path:
 ~/.agent_need_coffee/coffee.sqlite3
 ```
 
-Override it when needed:
+Override it:
 
 ```bash
 export AGENT_NEED_COFFEE_DB=/path/to/coffee.sqlite3
 ```
 
-## Runtime Workflow
+## Runtime Flow
 
-1. The MCP client starts `agent-need-coffee-mcp`.
-2. The agent calls `coffee_report_event` after meaningful runtime events.
-3. The server stores the event in SQLite.
-4. The policy engine calculates the current agent state.
-5. The server returns a structured recovery recommendation.
-6. The agent changes its next action based on that recommendation.
-7. If the agent calls `coffee_take_break`, the server records a checkpoint and
-   resets active loop analysis for future events.
+```text
+1. Agent runs work
+2. Something meaningful happens
+3. Agent calls coffee_report_event
+4. Server persists the event
+5. PolicyEngine calculates run health
+6. Server returns a recovery action
+7. Agent changes its next move
+```
 
-The server does not magically control the model. It improves the agent by giving
-it an external control-flow signal that is harder to ignore than internal
-reasoning alone.
+If the agent calls `coffee_take_break`, the server records a checkpoint and
+resets active loop analysis for future events. Historical events remain in the
+timeline.
 
 ## Install
 
@@ -78,7 +110,7 @@ Requires Python 3.10 or newer. Python 3.9 cannot install the current MCP SDK.
 pip install agent-need-coffee
 ```
 
-For local development from this repository:
+For local development:
 
 ```bash
 python -m pip install --upgrade pip
@@ -87,7 +119,7 @@ pip install -e ".[dev]"
 
 ## MCP Client Configuration
 
-Use this command in any MCP-capable client:
+Use the installed command:
 
 ```bash
 agent-need-coffee-mcp
@@ -105,7 +137,7 @@ Generic MCP configuration:
 }
 ```
 
-For development from a checkout:
+Development checkout configuration:
 
 ```json
 {
@@ -121,37 +153,55 @@ For development from a checkout:
 }
 ```
 
-## When The Agent Should Call It
+## Install The Skill
 
-| Situation | Tool call | Expected effect |
-| --- | --- | --- |
-| A command, tool, or test fails | `coffee_report_event` | Records evidence and updates loop detection |
-| The same failure repeats | `coffee_recommend_recovery` | Returns `create_checkpoint` or `ask_human` |
-| Context is too large | `coffee_report_event` with `context_pressure` | Returns `compact_context` |
-| Rate limits or retries accumulate | `coffee_report_event` with `rate_limit` or retries | Returns `backoff` |
-| The agent needs a reset point | `coffee_take_break` | Records a break and resets active loop analysis |
-| A run should start fresh | `coffee_clear_run` | Deletes local state for that run |
+The repository includes a Codex/Agent skill that tells the agent when to call
+AgentNeedCoffee.
+
+```bash
+cp -R skills/agent-need-coffee "${CODEX_HOME:-$HOME/.codex}/skills/"
+```
+
+Once installed, the skill triggers when the agent repeats failures, accumulates
+retries, hits rate limits, faces context pressure, or needs a checkpoint. It then
+instructs the agent to call the MCP tools and follow the returned action.
 
 ## Tool Reference
 
-### `coffee_report_event`
+<table>
+  <tr>
+    <th>Tool</th>
+    <th>Use it when</th>
+    <th>What it returns or changes</th>
+  </tr>
+  <tr>
+    <td><code>coffee_report_event</code></td>
+    <td>A command, test, model call, or tool call succeeds or fails.</td>
+    <td>Stores the event and returns updated state plus recovery advice.</td>
+  </tr>
+  <tr>
+    <td><code>coffee_get_state</code></td>
+    <td>The agent needs current run health.</td>
+    <td>Returns scores, counters, status, and dominant failure signature.</td>
+  </tr>
+  <tr>
+    <td><code>coffee_recommend_recovery</code></td>
+    <td>No new event happened, but the agent needs a decision.</td>
+    <td>Returns a structured recovery action.</td>
+  </tr>
+  <tr>
+    <td><code>coffee_take_break</code></td>
+    <td>The agent needs to checkpoint before continuing.</td>
+    <td>Records a break and resets active loop analysis.</td>
+  </tr>
+  <tr>
+    <td><code>coffee_clear_run</code></td>
+    <td>The run is intentionally starting over.</td>
+    <td>Deletes local state for one agent/run pair.</td>
+  </tr>
+</table>
 
-Records a runtime event and immediately returns updated state plus a recovery
-recommendation.
-
-Useful event types:
-
-- `progress`
-- `model_call`
-- `tool_call`
-- `tool_error`
-- `test_failure`
-- `retry`
-- `rate_limit`
-- `context_pressure`
-- `checkpoint`
-
-Example input:
+## Example Event
 
 ```json
 {
@@ -167,7 +217,7 @@ Example input:
 }
 ```
 
-Example output after repeated failures:
+Example recovery after repeated failures:
 
 ```json
 {
@@ -186,33 +236,16 @@ Example output after repeated failures:
 }
 ```
 
-### `coffee_get_state`
+## Recovery Actions
 
-Returns the current health state for an agent run since the last coffee break.
-
-### `coffee_recommend_recovery`
-
-Returns a structured recommendation without recording a new event.
-
-Possible actions:
-
-- `continue`
-- `continue_with_smaller_step`
-- `backoff`
-- `compact_context`
-- `create_checkpoint`
-- `ask_human`
-- `stop_loop`
-
-### `coffee_take_break`
-
-Records a coffee checkpoint and resets active loop analysis for future events.
-Historical events remain available in the run timeline.
-
-### `coffee_clear_run`
-
-Clears local state for one agent/run pair. Use only when intentionally starting
-over.
+| Action | Meaning |
+| --- | --- |
+| `continue` | The run is steady. Proceed normally. |
+| `continue_with_smaller_step` | Narrow the next action to one hypothesis. |
+| `backoff` | Pause retries and reduce frequency or request size. |
+| `compact_context` | Summarize the run before continuing. |
+| `create_checkpoint` | Stop broad execution and write a recovery checkpoint. |
+| `ask_human` | Do not keep retrying; ask for direction. |
 
 ## Resources And Prompt
 
@@ -233,24 +266,24 @@ The prompt asks the agent to write a compact checkpoint containing the current
 goal, evidence, failed attempts, dominant failure signature, and exactly one next
 action.
 
-## Policy Summary
+## Policy Model
 
-The policy engine computes three scores:
+The policy engine computes:
 
 - `fatigue_score`: token volume, retry count, and run duration
 - `friction_score`: failure volume, repeated failures, and rate limits
 - `loop_score`: how strongly one failure signature is repeating
 
-The server then maps those scores to recovery actions:
+It then maps those signals to recovery actions:
 
-| Signal | Action |
-| --- | --- |
-| No concerning events | `continue` |
-| Multiple unrelated failures | `continue_with_smaller_step` |
-| Retries or rate limits | `backoff` |
-| High token/context pressure | `compact_context` |
-| Repeated failure loop | `create_checkpoint` |
-| Persistent repeated loop | `ask_human` |
+```text
+steady -> continue
+minor failures -> continue_with_smaller_step
+retries/rate limits -> backoff
+context pressure -> compact_context
+repeated failure -> create_checkpoint
+persistent loop -> ask_human
+```
 
 ## Development
 

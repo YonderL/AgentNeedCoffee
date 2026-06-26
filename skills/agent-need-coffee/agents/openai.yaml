@@ -1,0 +1,14 @@
+interface:
+  display_name: "AgentNeedCoffee"
+  short_description: "Recover AI agents from failure loops"
+  default_prompt: "Use $agent-need-coffee to report repeated failures to the MCP server and follow the returned recovery action."
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "agent-need-coffee"
+      description: "Local AgentNeedCoffee MCP server for runtime event reporting and recovery recommendations"
+      transport: "stdio"
+
+policy:
+  allow_implicit_invocation: true

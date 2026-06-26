@@ -101,3 +101,19 @@ def test_mcp_server_registers_when_sdk_is_available():
     from agent_need_coffee import mcp_server
 
     assert mcp_server.mcp is not None
+
+
+def test_repository_skill_metadata_exists():
+    root = Path(__file__).resolve().parents[1]
+    skill = root / "skills" / "agent-need-coffee" / "SKILL.md"
+    metadata = root / "skills" / "agent-need-coffee" / "agents" / "openai.yaml"
+
+    assert skill.exists()
+    assert metadata.exists()
+
+    skill_text = skill.read_text(encoding="utf-8")
+    metadata_text = metadata.read_text(encoding="utf-8")
+
+    assert "name: agent-need-coffee" in skill_text
+    assert "coffee_report_event" in skill_text
+    assert "$agent-need-coffee" in metadata_text
