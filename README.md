@@ -1,25 +1,74 @@
 # AgentNeedCoffee
 
-AgentNeedCoffee is a local MCP server that helps AI agents notice when they are
-stuck, checkpoint their work, and recover instead of repeating the same failing
-step.
+AgentNeedCoffee is a local Model Context Protocol (MCP) server that helps AI
+agents recover from bad control flow: repeated failed commands, blind retries,
+context pressure, rate limits, and long-running work without progress.
 
-The "coffee break" is not a cosmetic pause. It records a recovery checkpoint and
-changes the next recommendation for the run.
+The coffee metaphor stays, but the product is now a recovery layer. A "coffee
+break" records a checkpoint and changes how the next recommendation is computed.
 
-## What It Does
+## Why It Exists
 
-AgentNeedCoffee gives MCP-capable agents tools to:
+Most agent failures are not caused by a lack of model intelligence. They happen
+when the agent keeps doing the same unproductive thing:
 
-- report model, tool, command, test, retry, rate-limit, and context-pressure events
-- persist run state locally in SQLite
-- detect repeated failure loops
-- recommend concrete recovery actions
-- create a break/checkpoint that resets active loop analysis
-- expose state and timelines as MCP resources
+- rerunning the same failing command
+- retrying a flaky tool without changing any variable
+- continuing after the context has become too large
+- editing more code before isolating the failing assumption
+- failing to ask for human input when autonomous progress is unlikely
 
-The server is local-first. It runs over stdio, so you do not need a cloud server,
-domain, open port, or hosted API.
+AgentNeedCoffee gives the agent a small external memory and policy engine. The
+agent reports what is happening, then the MCP server returns a concrete recovery
+action such as `create_checkpoint`, `compact_context`, `backoff`, or `ask_human`.
+
+## Architecture
+
+AgentNeedCoffee is local-first. It does not require a cloud server, domain, open
+port, account system, or hosted database.
+
+```text
+AI agent / MCP client
+        |
+        | stdio MCP
+        v
+agent-need-coffee-mcp
+        |
+        | records events, evaluates policy
+        v
+SQLite state store
+```
+
+The MCP client starts `agent-need-coffee-mcp` as a local process and communicates
+with it over standard input/output. The server persists state in SQLite so it can
+remember a run across tool calls and process restarts.
+
+Default state path:
+
+```text
+~/.agent_need_coffee/coffee.sqlite3
+```
+
+Override it when needed:
+
+```bash
+export AGENT_NEED_COFFEE_DB=/path/to/coffee.sqlite3
+```
+
+## Runtime Workflow
+
+1. The MCP client starts `agent-need-coffee-mcp`.
+2. The agent calls `coffee_report_event` after meaningful runtime events.
+3. The server stores the event in SQLite.
+4. The policy engine calculates the current agent state.
+5. The server returns a structured recovery recommendation.
+6. The agent changes its next action based on that recommendation.
+7. If the agent calls `coffee_take_break`, the server records a checkpoint and
+   resets active loop analysis for future events.
+
+The server does not magically control the model. It improves the agent by giving
+it an external control-flow signal that is harder to ignore than internal
+reasoning alone.
 
 ## Install
 
@@ -36,15 +85,15 @@ python -m pip install --upgrade pip
 pip install -e ".[dev]"
 ```
 
-## Run As A Local stdio MCP Server
+## MCP Client Configuration
+
+Use this command in any MCP-capable client:
 
 ```bash
 agent-need-coffee-mcp
 ```
 
-MCP clients normally start this command for you.
-
-Example client configuration:
+Generic MCP configuration:
 
 ```json
 {
@@ -56,23 +105,38 @@ Example client configuration:
 }
 ```
 
-The server stores data at:
+For development from a checkout:
 
-```text
-~/.agent_need_coffee/coffee.sqlite3
+```json
+{
+  "mcpServers": {
+    "agent-need-coffee": {
+      "command": "python",
+      "args": ["-m", "agent_need_coffee.mcp_server"],
+      "env": {
+        "PYTHONPATH": "/absolute/path/to/AgentNeedCoffee/src"
+      }
+    }
+  }
+}
 ```
 
-Override it with:
+## When The Agent Should Call It
 
-```bash
-export AGENT_NEED_COFFEE_DB=/path/to/coffee.sqlite3
-```
+| Situation | Tool call | Expected effect |
+| --- | --- | --- |
+| A command, tool, or test fails | `coffee_report_event` | Records evidence and updates loop detection |
+| The same failure repeats | `coffee_recommend_recovery` | Returns `create_checkpoint` or `ask_human` |
+| Context is too large | `coffee_report_event` with `context_pressure` | Returns `compact_context` |
+| Rate limits or retries accumulate | `coffee_report_event` with `rate_limit` or retries | Returns `backoff` |
+| The agent needs a reset point | `coffee_take_break` | Records a break and resets active loop analysis |
+| A run should start fresh | `coffee_clear_run` | Deletes local state for that run |
 
-## MCP Tools
+## Tool Reference
 
 ### `coffee_report_event`
 
-Record an agent runtime event and immediately get an updated recovery
+Records a runtime event and immediately returns updated state plus a recovery
 recommendation.
 
 Useful event types:
@@ -87,7 +151,7 @@ Useful event types:
 - `context_pressure`
 - `checkpoint`
 
-Example:
+Example input:
 
 ```json
 {
@@ -103,10 +167,16 @@ Example:
 }
 ```
 
-After repeated failures, the tool returns:
+Example output after repeated failures:
 
 ```json
 {
+  "state": {
+    "status": "stuck",
+    "failure_events": 3,
+    "repeated_failure_count": 3,
+    "dominant_failure_signature": "pytest-same-assertion"
+  },
   "recovery": {
     "severity": "high",
     "action": "create_checkpoint",
@@ -118,13 +188,13 @@ After repeated failures, the tool returns:
 
 ### `coffee_get_state`
 
-Return the current health state for an agent run since the last coffee break.
+Returns the current health state for an agent run since the last coffee break.
 
 ### `coffee_recommend_recovery`
 
-Return a structured recovery action without recording a new event.
+Returns a structured recommendation without recording a new event.
 
-Actions include:
+Possible actions:
 
 - `continue`
 - `continue_with_smaller_step`
@@ -136,44 +206,51 @@ Actions include:
 
 ### `coffee_take_break`
 
-Create a coffee checkpoint, record a break, and reset active loop analysis for
-future events. Historical events remain in the timeline.
+Records a coffee checkpoint and resets active loop analysis for future events.
+Historical events remain available in the run timeline.
 
 ### `coffee_clear_run`
 
-Clear local state for one agent run when intentionally starting over.
+Clears local state for one agent/run pair. Use only when intentionally starting
+over.
 
-## MCP Resources
+## Resources And Prompt
+
+Resources:
 
 ```text
 coffee://agents/{agent_id}/state
 coffee://runs/{run_id}/timeline
 ```
 
-## MCP Prompt
+Prompt:
 
 ```text
 coffee_recovery_review
 ```
 
-This prompt generates a compact recovery review for a stuck run. It asks the
-agent to summarize the goal, evidence, failed attempts, dominant failure
-signature, and exactly one next action.
+The prompt asks the agent to write a compact checkpoint containing the current
+goal, evidence, failed attempts, dominant failure signature, and exactly one next
+action.
 
-## Why This Helps Agents
+## Policy Summary
 
-Many agent failures are not reasoning failures; they are control-flow failures.
-The agent repeats the same command, retries the same API, keeps editing without
-a narrowing hypothesis, or continues after context has become too large.
+The policy engine computes three scores:
 
-AgentNeedCoffee gives the agent a small external memory and policy layer so it
-can:
+- `fatigue_score`: token volume, retry count, and run duration
+- `friction_score`: failure volume, repeated failures, and rate limits
+- `loop_score`: how strongly one failure signature is repeating
 
-- detect that a loop is happening
-- stop blind retries
-- compact context at the right time
-- checkpoint before continuing
-- ask for human input when autonomous progress is unlikely
+The server then maps those scores to recovery actions:
+
+| Signal | Action |
+| --- | --- |
+| No concerning events | `continue` |
+| Multiple unrelated failures | `continue_with_smaller_step` |
+| Retries or rate limits | `backoff` |
+| High token/context pressure | `compact_context` |
+| Repeated failure loop | `create_checkpoint` |
+| Persistent repeated loop | `ask_human` |
 
 ## Development
 
